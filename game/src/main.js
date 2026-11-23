@@ -169,16 +169,17 @@ function shotMode(shot) {
     state.turn = 3;
     state.intent = { suit: 'tide', value: 5 };
     state.lastParry = false;
-    const cheap = state.hand
-      .map((card, index) => ({ card, index }))
-      .filter(({ card }) => card.cost <= 1)
-      .slice(0, 2);
-    for (const { index } of cheap) state.selected.add(index);
-    state.arena = [state.hand[2], state.hand[3]].filter(Boolean);
+    // Stage the counter-play: two cheap Moss cards answer the Tide intent,
+    // so the pictured hand, the exchange and the bonus banner tell one story.
+    const moss = state.drawPile.filter((card) => card.suit === 'moss' && card.cost <= 1).slice(0, 2);
+    const rest = state.hand.filter((card) => !moss.includes(card)).slice(0, 3);
+    state.hand = [moss[0], ...rest, moss[1]].filter(Boolean);
+    state.selected = new Set([0, state.hand.length - 1]);
+    state.arena = [moss[0], moss[1]].filter(Boolean);
     state.banner = 'RESONANCE +2 · EXPLOIT +3';
     renderStatus(state);
     renderArena(state.arena, state.banner);
-    updateHandClasses('player-hand', state.hand, state.selected, state.energy);
+    refreshHands();
     setPlayEnabled(state.selected.size > 0);
     return;
   }
